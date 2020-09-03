@@ -17,18 +17,17 @@ NB_EPOCH = 20
 
 # 1 - CNN construction
 from keras.models import Sequential
-from keras.models import load_model
-import tensorflow
 
-# Loading model
-classifier = tensorflow.keras.models.load_model("models\\01-09-2020.0.82.hdf5")
-classifier.summary()
+# Loading model if you want to
+# from keras.models import load_model
+# classifier = tensorflow.keras.models.load_model(<PATH_TO_THE_MODEL>)
+# classifier.summary()
 
-from keras.applications import Xception
 
 # CNN initialization
 classifier = Sequential()
 
+from keras.applications import Xception
 xception = Xception(weights='imagenet', 
                                  include_top = False, 
                                  input_shape = (INPUT_SIZE, INPUT_SIZE,3),
@@ -58,7 +57,6 @@ classifier.add(Dropout(0.1))
 classifier.add(Dense(units=NB_BREEDS, activation="softmax"))
 
 # Compilation
-from keras.optimizers import RMSprop
 classifier.summary()
 classifier.compile(optimizer="adam", loss="categorical_crossentropy", metrics=['accuracy'])
 
@@ -82,10 +80,10 @@ test_set = test_datagen.flow_from_directory(
         class_mode='categorical')
 
 
-# Checkpoints
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-callback = EarlyStopping(monitor='loss', patience=3)
-checkpoint = ModelCheckpoint("<YOUR_PATH>", monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
+# Checkpoints (if you want to use them, add the callback argument in the fit() call)
+# from keras.callbacks import EarlyStopping, ModelCheckpoint
+# callback = EarlyStopping(monitor='loss', patience=3)
+# checkpoint = ModelCheckpoint("<YOUR_PATH>", monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
 
 
 # GO!
@@ -94,25 +92,23 @@ history = classifier.fit(
         steps_per_epoch=NB_TRAIN // BATCH_SIZE,
         epochs=NB_EPOCH,
         validation_data=test_set,
-        validation_steps=NB_VALID // BATCH_SIZE,
-        callbacks=[callback, checkpoint])
+        validation_steps=NB_VALID // BATCH_SIZE)
 
 # Final saving
-classifier.save("<YOUR_PATH>")
+# classifier.save("<YOUR_PATH>")
 
 
 # For single predictions :)
 import numpy as np
 from keras.preprocessing import image
-import matplotlib.pyplot as plt
 
-IMAGE = "single_predictions\\error.jpg" # Just put the path to your image
+
+IMAGE = "<PATH_TO_YOUR_IMAGE>" # Just put the path to your image
 my_prediction = image.load_img(IMAGE, target_size=(512,512))
 my_prediction = image.img_to_array(my_prediction)
 my_prediction /= 255.
 my_prediction = np.expand_dims(my_prediction, axis=0)
 result = classifier.predict(my_prediction)
-
 
 # Some stuff to build a nice result
 breed = list(training_set.class_indices.keys())[np.argmax(result)].split(".")[1]
